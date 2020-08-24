@@ -330,6 +330,9 @@ components:
         label:
           description: "A human readable label for dimension"
           type: string
+        category:
+          description: "The category to which a dataset dimension belongs to. For instance if there are two dimension representing age, one with intervals of 5 and the other with 10, both will be of category `age`. Only applies to data type of `ftb`."
+          type: string
     CollectionID:
       description: "The id of the unpublished collection (of datasets) that this dataset is associated with"
       type: string
@@ -382,6 +385,9 @@ components:
     Dataset:
       description: "The dataset"
       type: object
+      required: [
+        type
+      ]
       properties:
         collection_id:
           $ref: '#/components/schemas/CollectionID'
@@ -393,6 +399,25 @@ components:
         description:
           description: "A description for a dataset"
           type: string
+        ftb_type:
+          description: "The ftb data type."
+          enum: [
+            "data-blob", "data-table"
+          ]
+          type: string
+        is_based_on:
+          description: "A list of resources in which this dataset relates to parent resources. Only applies to ftb data type: `ftb-tables`."
+          type: array
+          items:
+            type: object
+            properties:
+              "@type":
+                description: "The resource type of the parent resource to which the dataset relates to."
+                type: string
+                enum: [ "DataSet" ]
+              "@id":
+                description: "The url that relates ftb table to parent ftb blob dataset."
+                type: string
         keywords:
           description: "A list of keywords for a dataset"
           type: array
@@ -471,12 +496,34 @@ components:
           type: string
         state:
           $ref: '#/components/schemas/State'
+        tables:
+          description: "A list of tables related to a dataset with an `ftb_type` of `data-blob`."
+          type: array
+          items:
+            type: object
+            required: [
+              href,
+              title
+            ]
+            properties:
+              href:
+                description: "The url to an ftb table dataset."
+                type: string
+              title:
+                description: "The title of the ftb table dataset."
+                type: string
         theme:
           description: "The theme for a dataset"
           type: string
         title:
           description: "The title of the dataset"
           example: "CPI"
+          type: string
+        type:
+          description: "The type of dataset"
+          enum: [
+            ftb, cmd
+          ]
           type: string
         unit_of_measure:
           description: "The unit of measure for the dataset observations"
@@ -629,14 +676,55 @@ components:
           example: "2017"
           readOnly: true
           type: string
+        ftb_type:
+          description: "The ftb data type."
+          enum: [
+            "data-blob", "data-table"
+          ]
+          type: string
         id:
           description: "An unique id for a dataset edition"
           readOnly: true
           type: string
+        is_based_on:
+          description: "A list of resources in which this dataset edition relates to parent resources. Only applies to ftb data type: `ftb-tables`."
+          type: array
+          items:
+            type: object
+            properties:
+              "@type":
+                description: "The resource type of the parent resource to which the dataset edition relates to."
+                type: string
+                enum: [ "DataSet" ]
+              "@id":
+                description: "The url that relates ftb table dataset edition to parent ftb blob dataset edition."
+                type: string
         links:
           $ref: '#/components/schemas/EditionLinks'
         state:
           $ref: '#/components/schemas/State'
+        tables:
+          description: "A list of tables related to a dataset edition with an `ftb_type` of data-blob."
+          type: array
+          items:
+            type: object
+            required: [
+              href,
+              title
+            ]
+            properties:
+              href:
+                description: "The url to an ftb table dataset edition."
+                type: string
+              title:
+                description: "The title of the ftb table dataset edition."
+                type: string
+        type:
+          description: "The type of dataset edtion."
+          enum: [
+            ftb, cmd
+          ]
+          type: string
     Editions:
       type: object
       properties:
@@ -708,6 +796,25 @@ components:
               $ref: '#/components/schemas/DownloadObject'
             xls:
               $ref: '#/components/schemas/DownloadObject'
+        ftb_type:
+          description: "The ftb data type."
+          enum: [
+            "data-blob", "data-table"
+          ]
+          type: string
+        is_based_on:
+          description: "A list of resources in which this dataset versions relates to parent resources. Only applies to ftb data type: `ftb-tables`."
+          type: array
+          items:
+            type: object
+            properties:
+              "@type":
+                description: "The resource type of the parent resource to which the version of this dataset relates to."
+                type: string
+                enum: [ "DataSet" ]
+              "@id":
+                description: "The url that relates ftb table to parent ftb blob dataset."
+                type: string
         keywords:
           description: "A list of keywords for a dataset"
           type: array
@@ -792,6 +899,22 @@ components:
         release_frequency:
           description: "The release frequency of a dataset"
           type: string
+        tables:
+          description: "A list of tables related to a version of dataset with an `ftb_type` of data-blob."
+          type: array
+          items:
+            type: object
+            required: [
+              href,
+              title
+            ]
+            properties:
+              href:
+                description: "The url to an ftb table version of a dataset."
+                type: string
+              title:
+                description: "The title of the ftb table version of a dataset."
+                type: string
         temporal:
           $ref: '#/components/schemas/Temporal'
         theme:
@@ -800,6 +923,12 @@ components:
         title:
           description: "The title of the dataset"
           example: "CPI"
+          type: string
+        type:
+          description: "The type of version fo dataset, either ftb or cmd."
+          enum: [
+            ftb, cmd
+          ]
           type: string
         unit_of_measure:
           description: "The unit of measure for the dataset observations"
@@ -910,9 +1039,33 @@ components:
           description: "The dataset edition for this version"
           readOnly: true
           type: string
+        flexible_dimensions:
+          description: "A list of codelists for each dimension that exists for an ftb data type of `ftb-table`. To allow one to flex a version of the ftb dataset table."
+          type: array
+          items:
+            $ref: '#/components/schemas/Codelist'
+        ftb_type:
+          description: "The ftb data type."
+          enum: [
+            "data-blob", "data-table"
+          ]
+          type: string
         id:
           description: "The identifier for this version of an edition for a dataset"
           type: string
+        is_based_on:
+          description: "A list of resources in which this dataset versions relates to parent resources. Only applies to ftb data type: `ftb-tables`."
+          type: array
+          items:
+            type: object
+            properties:
+              "@type":
+                description: "The resource type of the parent resource to which the version of this dataset relates to."
+                type: string
+                enum: [ "DataSet" ]
+              "@id":
+                description: "The url that relates ftb table to parent ftb blob dataset."
+                type: string
         latest_changes:
           description: "A list of changes between version of an edition for a dataset and the previous version of the same dataset edition"
           type: array
@@ -925,8 +1078,30 @@ components:
           type: string
         state:
           $ref: '#/components/schemas/State'
+        tables:
+          description: "A list of tables related to a version of dataset with an `ftb_type` of data-blob."
+          type: array
+          items:
+            type: object
+            required: [
+              href,
+              title
+            ]
+            properties:
+              href:
+                description: "The url to an ftb table version of a dataset."
+                type: string
+              title:
+                description: "The title of the ftb table version of a dataset."
+                type: string
         temporal:
           $ref: '#/components/schemas/Temporal'
+        type:
+          description: "The type of version fo dataset, either ftb or cmd."
+          enum: [
+            ftb, cmd
+          ]
+          type: string
         version:
           description: "A number identifying the version for an edition from a dataset"
           example: 1
