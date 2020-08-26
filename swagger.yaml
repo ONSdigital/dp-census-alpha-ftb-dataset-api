@@ -1,0 +1,1267 @@
+openapi: 3.0.0
+info:
+  description: "Used to find information about data published by the ONS. `Datasets` are published in unique `versions`, which are categorized by `edition`. Data in each version is broken down by `dimensions`, and a unique combination of dimension `options` in a version can be used to retrieve `observation` level data."
+  version: "v2.0.0"
+  title: "Explore our data"
+  license:
+    name: "Open Government Licence v3.0"
+    url: "http://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/"
+servers:
+  - url: http://cat.ons.digital/v1
+    description: "Staging API for prototype"
+tags:
+- name: "Public"
+paths:
+  /datasets:
+    get:
+      tags:
+      - "Public"
+      summary: "Get a list of datasets"
+      description: "Returns a list of all datasets provided by the ONS that can be filtered using the filter API"
+      responses:
+        200:
+          description: "A json list containing datasets which have been published"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Datasets'
+        500:
+          $ref: '#/components/responses/InternalError'
+  /datasets/{id}:
+    get:
+      tags:
+      - "Public"
+      summary: "Get a dataset"
+      description: "The dataset contains all high level information, for additional details see editions or versions of a dataset. "
+      parameters:
+      - $ref: '#/components/parameters/id'
+      responses:
+        200:
+          description: "A json object for a single Dataset"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DatasetResponse'
+        404:
+          description: "No dataset was found using the id provided"
+        500:
+          $ref: '#/components/responses/InternalError'
+  /datasets/{id}/editions:
+    get:
+      tags:
+      - "Public"
+      summary: "Get a list of editions of a dataset"
+      description: "Get a list of editions of a type of dataset"
+      parameters:
+      - $ref: '#/components/parameters/id'
+      responses:
+        200:
+          description: "A json list containing all editions for a dataset"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Editions'
+        400:
+          description: "Invalid request, dataset id was incorrect"
+        404:
+          description: "No editions were found for the id provided"
+        500:
+          $ref: '#/components/responses/InternalError'
+  /datasets/{id}/editions/{edition}:
+    get:
+      tags:
+      - "Public"
+      summary: "Get an edition of a dataset"
+      description: "The edition contains a link to all versions"
+      parameters:
+      - $ref: '#/components/parameters/edition'
+      - $ref: '#/components/parameters/id'
+      responses:
+        200:
+          description: "A json object containing an edition"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Edition'
+        400:
+          description: "Invalid request, dataset id was incorrect"
+        404:
+          description: "No edition of a dataset was found using the id and edition provided"
+        500:
+          $ref: '#/components/responses/InternalError'
+  /datasets/{id}/editions/{edition}/versions:
+    get:
+      tags:
+      - "Public"
+      summary: "Get a list of versions of an edition"
+      description: "Get a list of all versions for an edition of a dataset"
+      parameters:
+      - $ref: '#/components/parameters/edition'
+      - $ref: '#/components/parameters/id'
+      responses:
+        200:
+          description: "A json list containing all versions for a set type of dataset and edition"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Versions'
+        400:
+          description: |
+            Invalid request, reasons can be one of the following:
+              * dataset id was incorrect
+              * edition was incorrect
+        404:
+          description: "No versions found using the id and edition provided"
+        500:
+          $ref: '#/components/responses/InternalError'
+  /datasets/{id}/editions/{edition}/versions/{version}:
+    get:
+      tags:
+      - "Public"
+      summary: "Get a version"
+      description: "Get a specific version of an edition of a dataset"
+      parameters:
+      - $ref: '#/components/parameters/edition'
+      - $ref: '#/components/parameters/id'
+      - $ref: '#/components/parameters/version'
+      responses:
+        200:
+          description: "A json object containing the edition and version of a dataset"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Version'
+        400:
+          description: |
+            Invalid request, reasons can be one of the following:
+              * dataset id was incorrect
+              * edition was incorrect
+        404:
+          description: "No version was found for an edition of a dataset using the id, edition and version provided"
+        500:
+          $ref: '#/components/responses/InternalError'
+  /datasets/{id}/editions/{edition}/versions/{version}/dimensions:
+    get:
+      tags:
+      - "Public"
+      summary: "Get a list of dimensions from a dataset"
+      description: "Get all dimensions which are used in the dataset"
+      parameters:
+      - $ref: '#/components/parameters/edition'
+      - $ref: '#/components/parameters/id'
+      - $ref: '#/components/parameters/version'
+      responses:
+        200:
+          description: "A json list of dimensions"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Dimensions'
+        400:
+          description: |
+            Invalid request, reasons can be one of the following:
+              * dataset id was incorrect
+              * edition was incorrect
+              * version was incorrect
+        404:
+          description: "No dimensions found for version of an edition of a dataset using the id, edition and version provided"
+        500:
+          $ref: '#/components/responses/InternalError'
+  /datasets/{id}/editions/{edition}/versions/{version}/dimensions/{dimension}/options:
+    get:
+      tags:
+      - "Public"
+      summary: "Get a list of options from a dimension"
+      description: "Get a list of all options which appear in this dimension and dataset"
+      parameters:
+      - $ref: '#/components/parameters/dimension'
+      - $ref: '#/components/parameters/edition'
+      - $ref: '#/components/parameters/id'
+      - $ref: '#/components/parameters/version'
+      responses:
+        200:
+          description: "Json object containing all options for a dimension"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DimensionOptions'
+        400:
+          description: |
+            Invalid request, reasons can be one of the following:
+              * dataset id was incorrect
+              * edition was incorrect
+              * version was incorrect
+              * dimension was incorrect
+        404:
+          description: "No dimension options were found for dimension"
+        500:
+          $ref: '#/components/responses/InternalError'
+  /datasets/{id}/editions/{edition}/versions/{version}/metadata:
+    get:
+      tags:
+      - "Public"
+      summary: "Get metadata for a version"
+      description: "Get all metadata relevant to a version"
+      parameters:
+      - $ref: '#/components/parameters/edition'
+      - $ref: '#/components/parameters/id'
+      - $ref: '#/components/parameters/version'
+      responses:
+        200:
+          description: "Json object containing all metadata for a version"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Metadata'
+        400:
+          description: |
+            Invalid request, reasons can be one of the following:
+              * dataset id was incorrect
+              * edition was incorrect
+        404:
+          description: "Version not found"
+        500:
+          $ref: '#/components/responses/InternalError'
+components:
+  parameters:
+    dataset:
+      name: dataset
+      description: "A unique id for a dataset to filter on"
+      in: query
+      schema:
+        type: string
+    dimension:
+      name: dimension
+      description: "A dimension from a dataset"
+      in: path
+      required: true
+      schema:
+        type: string
+    dimension_options:
+      description: "The name of the dimension option and a single value; each option (dimension) and corresponding value (code) must exist against the version - e.g. `age=30` or one of the dimension options can be represented by a wildcard value `*` e.g. `geography=*`"
+      name: "<dimension_options>"
+      in: query
+      required: true
+      schema:
+        type: string
+    edition:
+      name: edition
+      description: "An edition of a dataset"
+      in: path
+      required: true
+      schema:
+        type: string
+    id:
+      name: id
+      description: "Id that represents a dataset"
+      in: path
+      required: true
+      schema:
+        type: string
+    option:
+      name: option
+      description: "A option to set within a type"
+      in: path
+      required: true
+      schema:
+        type: string
+    state:
+      name: "state"
+      description: "A comma separated list of state values to filter on (e.g. ‘completed,edition-confirmed’)"
+      in: query
+      schema:
+        type: string
+    version:
+      name: version
+      description: "A version of a dataset"
+      in: path
+      required: true
+      schema:
+        type: string
+  responses:
+    ConflictError:
+      description: "Failed to process the request due to a conflict"
+    ForbiddenError:
+      description: "The request is forbidden"
+    InstanceNotFound:
+      description: "The instance was not found"
+    InternalError:
+      description: "Failed to process the request due to an internal error"
+    InvalidRequestError:
+      description: "Failed to process the request due to invalid request"
+    UnauthorisedError:
+      description: "The token provided is unauthorised to carry out this operation"
+  schemas:
+    AccessRightsLink:
+      type: object
+      properties:
+        href:
+          description: "A url to the standard Government access right text for the dataset"
+          type: string
+    Alert:
+      description: "Important information relating to a version of a dataset"
+      type: object
+      properties:
+        date:
+          description: "The date and time of when an alert took place"
+          type: string
+        description:
+          description: "Detail of what a user needs to be aware of for this dataset"
+          type: string
+        type:
+          description: "The type of alert"
+          example: "correction"
+          type: string
+    Codelist:
+      type: object
+      properties:
+        href:
+          description: "A link to the codelist corresponding to this dimension"
+          type: string
+        id:
+          description: "The codelist id corresponding to this dimension"
+          type: string
+        name:
+          description: "The dimension name"
+          type: string
+        description:
+          description: "The dimension description"
+          type: string
+        label:
+          description: "A human readable label for dimension"
+          type: string
+        category:
+          description: "The category to which a dataset dimension belongs to. For instance if there are two dimension representing age, one with intervals of 5 and the other with 10, both will be of category `age`. Only applies to data type of `ftb`."
+          type: string
+    CollectionID:
+      description: "The id of the unpublished collection (of datasets) that this dataset is associated with"
+      type: string
+    Contact:
+      description: "A list of objects containing contact information for this dataset"
+      type: object
+      properties:
+        email:
+          description: "An email address to contact the statistician"
+          type: string
+        name:
+          description: "The name of the statistician"
+          type: string
+        telephone:
+          description: "Telephone number to contact the statistician"
+          type: string
+    Datasets:
+      description: "A list of datasets"
+      type: object
+      properties:
+        count:
+          description: "The number of datasets returned"
+          readOnly: true
+          type: integer
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/DatasetResponse'
+        limit:
+          description: "The number of datasets requested"
+          type: integer
+        offset:
+          description: "The first row of datasets to retrieve, starting at 0. Use this parameter as a pagination mechanism along with the limit parameter"
+          type: integer
+        total_count:
+          description: "The total number of datasets"
+          readOnly: true
+          type: integer
+    DatasetResponse:
+      description: "A model for the response body when getting a dataset"
+      allOf:
+      - type: object
+        properties:
+          id:
+            description: "An unique id for a dataset"
+            example: "DE3BC0B6-D6C4-4E20-917E-95D7EA8C91DC"
+            readOnly: true
+            type: string
+      - $ref: "#/components/schemas/Dataset"
+    Dataset:
+      description: "The dataset"
+      type: object
+      required: [
+        type
+      ]
+      properties:
+        collection_id:
+          $ref: '#/components/schemas/CollectionID'
+        contacts:
+          description: "A list containing contact details of staticians for a dataset"
+          type: array
+          items:
+            $ref: '#/components/schemas/Contact'
+        description:
+          description: "A description for a dataset"
+          type: string
+        ftb_type:
+          description: "The ftb data type."
+          enum: [
+            "data-blob", "data-table"
+          ]
+          type: string
+        is_based_on:
+          description: "A list of resources in which this dataset relates to parent resources. Only applies to ftb data type: `ftb-tables`."
+          type: array
+          items:
+            type: object
+            properties:
+              "@type":
+                description: "The resource type of the parent resource to which the dataset relates to."
+                type: string
+                enum: [ "DataSet" ]
+              "@id":
+                description: "The url that relates ftb table to parent ftb blob dataset."
+                type: string
+        keywords:
+          description: "A list of keywords for a dataset"
+          type: array
+          items:
+            type: "string"
+        license:
+          description: "The standard Government license right text for the dataset"
+          type: string
+        links:
+          $ref: '#/components/schemas/DatasetLinks'
+        methodologies:
+          description: "A list of methodologies for a dataset"
+          type: array
+          items:
+            type: object
+            properties:
+              description:
+                description: "The description of a methodology"
+                type: string
+              href:
+                description: "The url to a methodology"
+                type: string
+              title:
+                description: "The title of a methodology"
+                type: string
+        national_statistic:
+          description: "The flag indicating the resource is a national statistic. These are certified as compliant with the Code of Practice for Official Statistics"
+          type: boolean
+        next_release:
+          description: "The next release date for a dataset"
+          type: string
+        publications:
+          description: "A list of publications for a dataset"
+          type: array
+          items:
+            type: object
+            properties:
+              description:
+                description: "The description of a publication"
+                type: string
+              href:
+                description: "The url to a publication"
+                type: string
+              title:
+                description: "The title of a publication"
+                type: string
+        publisher:
+          $ref: '#/components/schemas/Publisher'
+        qmi:
+          description: "Object containing information on the quality and methodology index of a dataset"
+          type: object
+          properties:
+            description:
+              description: "The description of a quality and methodology index"
+              type: string
+            href:
+              description: "The url to a quality and methodology index"
+              type: string
+            title:
+              description: "The title of a quality and methodology index"
+              type: string
+        related_datasets:
+          description: "A list of objects containing information of datasets related to a dataset"
+          type: array
+          items:
+            type: object
+            properties:
+              href:
+                description: "The url to a related dataset"
+                type: string
+              title:
+                description: "The title of a related dataset"
+                type: string
+        release_frequency:
+          description: "The release frequency of a dataset"
+          type: string
+        state:
+          $ref: '#/components/schemas/State'
+        tables:
+          description: "A list of tables related to a dataset with an `ftb_type` of `data-blob`."
+          type: array
+          items:
+            type: object
+            required: [
+              href,
+              title
+            ]
+            properties:
+              href:
+                description: "The url to an ftb table dataset."
+                type: string
+              title:
+                description: "The title of the ftb table dataset."
+                type: string
+        theme:
+          description: "The theme for a dataset"
+          type: string
+        title:
+          description: "The title of the dataset"
+          example: "CPI"
+          type: string
+        type:
+          description: "The type of dataset"
+          enum: [
+            ftb, cmd
+          ]
+          type: string
+        unit_of_measure:
+          description: "The unit of measure for the dataset observations"
+          type: string
+        uri:
+          description: "The uri to the location of this resource on the web"
+          type: string
+    Dimension:
+      description: "A single dimension within a dataset"
+      type: object
+      properties:
+        description:
+          description: ""
+          type: string
+        dimension:
+          description: "The name of the dimension"
+          type: string
+        label:
+          description: ""
+          type: string
+        links:
+          type: object
+          properties:
+            code_list:
+              description: "The code list related to this dimension"
+              type: object
+              properties:
+                href:
+                  description: "A URL to the code list"
+                  type: string
+                id:
+                  description: "The unique id for the code list"
+                  type: string
+            options:
+              $ref: '#/components/schemas/OptionsLink'
+            version:
+              $ref: '#/components/schemas/VersionLink'
+    Dimensions:
+      type: object
+      properties:
+        count:
+          description: "The number of dimensions returned for a version from an edition of a dataset"
+          readOnly: true
+          type: integer
+        items:
+          description: "An array of dimensions"
+          type: array
+          items:
+            $ref: '#/components/schemas/Dimension'
+        limit:
+          description: "The number of dimensions requested for a version from an edition of a dataset"
+          type: integer
+        offset:
+          description: "The first row of dimension for a version from an edition of a dataset to retrieve, starting at 0. Use this parameter as a pagination mechanism along with the limit parameter"
+          type: integer
+        total_count:
+          description: "The total number of dimensions against a version from an edition of a dataset"
+          readOnly: true
+          type: integer
+    DimensionOptions:
+      type: object
+      properties:
+        count:
+          description: "The number of dimensions returned for a version from an edition of a dataset"
+          readOnly: true
+          type: integer
+        items:
+          description: "An array of dimension options"
+          type: array
+          items:
+            $ref: '#/components/schemas/DimensionOption'
+        limit:
+          description: "The number of dimensions requested for a version from an edition of a dataset"
+          type: integer
+        offset:
+          description: "The first row of dimension for a version from an edition of a dataset to retrieve, starting at 0. Use this parameter as a pagination mechanism along with the limit parameter"
+          type: integer
+        total_count:
+          description: "The total number of dimensions against a version from an edition of a dataset"
+          readOnly: true
+          type: integer
+    DimensionOption:
+      type: object
+      properties:
+        dimension:
+          description: "The name of the dimension"
+          type: string
+        instance_id:
+          description: "The unique identifier for the instance in which this dimension option is associated to"
+          type: string
+        label:
+          description: "A label given to a dimension option"
+          type: string
+        links:
+          description: "A object with all resources related to a dimension option"
+          type: object
+          properties:
+            code:
+              description: "A link to the code of the dimension for this option"
+              type: object
+              properties:
+                href:
+                  description: "The url of the code that refers to the dimension for this option"
+                  type: string
+                id:
+                  description: "The id of the code that refers to the dimension for this option"
+                  type: string
+            code_list:
+              description: "A link to the code list the dimension for this option belongs to"
+              type: object
+              properties:
+                href:
+                  description: "The url of the code list that the dimension for this option belongs to"
+                  type: string
+                id:
+                  description: "The id of the code list that the dimension for this option belongs to"
+                  type: string
+            version:
+              description: "A link to the version of the dataset the option belongs to"
+              readOnly: true
+              type: object
+              properties:
+                href:
+                  description: "The href of the version that this option belongs to"
+                  type: string
+                id:
+                  description: "The id of the version that this option belongs to"
+                  type: string
+        node_id:
+          description: "The id of the node"
+          type: string
+        option:
+          description: "An option for a dimension"
+          type: string
+    DownloadObject:
+      description: "Object containing information of a downloadable file"
+      type: object
+      properties:
+        href:
+          description: "The URL to the generated file"
+          type: string
+        size:
+          description: "The size of the file in bytes"
+          type: string
+    Edition:
+      type: object
+      properties:
+        edition:
+          description: "The edition of the dataset"
+          example: "2017"
+          readOnly: true
+          type: string
+        ftb_type:
+          description: "The ftb data type."
+          enum: [
+            "data-blob", "data-table"
+          ]
+          type: string
+        id:
+          description: "An unique id for a dataset edition"
+          readOnly: true
+          type: string
+        is_based_on:
+          description: "A list of resources in which this dataset edition relates to parent resources. Only applies to ftb data type: `ftb-tables`."
+          type: array
+          items:
+            type: object
+            properties:
+              "@type":
+                description: "The resource type of the parent resource to which the dataset edition relates to."
+                type: string
+                enum: [ "DataSet" ]
+              "@id":
+                description: "The url that relates ftb table dataset edition to parent ftb blob dataset edition."
+                type: string
+        links:
+          $ref: '#/components/schemas/EditionLinks'
+        state:
+          $ref: '#/components/schemas/State'
+        tables:
+          description: "A list of tables related to a dataset edition with an `ftb_type` of data-blob."
+          type: array
+          items:
+            type: object
+            required: [
+              href,
+              title
+            ]
+            properties:
+              href:
+                description: "The url to an ftb table dataset edition."
+                type: string
+              title:
+                description: "The title of the ftb table dataset edition."
+                type: string
+        type:
+          description: "The type of dataset edtion."
+          enum: [
+            ftb, cmd
+          ]
+          type: string
+    Editions:
+      type: object
+      properties:
+        count:
+          description: "The number of editions returned for a dataset"
+          readOnly: true
+          type: integer
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Edition'
+        limit:
+          description: "The number of editions requested for a dataset"
+          type: integer
+        offset:
+          description: "The first row of editions for a dataset to retrieve, starting at 0. Use this parameter as a pagination mechanism along with the limit parameter"
+          type: integer
+        total_count:
+          description: "The total number of editions against a dataset"
+          readOnly: true
+          type: integer
+    LatestChange:
+      description: "A single change between this version and the previous version of an edition for a dataset"
+      type: object
+      properties:
+        description:
+          description: "A description of what has changed between versions"
+          type: string
+        name:
+          description: "The name of the change that has occurred between versions"
+          type: string
+          example: "changes in classification"
+        type:
+          description: "The type of change"
+          type: string
+          example: "summary of changes"
+    Metadata:
+      description: "An object containing all metadata information against a version"
+      type: object
+      properties:
+        alerts:
+          description: "A list of alerts, for example corrections after the resource has been published"
+          type: array
+          items:
+            $ref: '#/components/schemas/Alert'
+        contacts:
+          description: "A list containing contact details of staticians for a dataset"
+          type: array
+          items:
+            $ref: '#/components/schemas/Contact'
+        description:
+          description: "A description for a dataset"
+          type: string
+        dimensions:
+          description: "A list of codelists for each dimension of this version"
+          type: array
+          items:
+            $ref: '#/components/schemas/Codelist'
+        distribution:
+          description: "A list of media types that the version data of an edition of a dataset can be accessed"
+          type: array
+          items:
+            type: string
+        downloads:
+          description: "A selection of download objects containing information of downloadable files."
+          type: object
+          properties:
+            csv:
+              $ref: '#/components/schemas/DownloadObject'
+            xls:
+              $ref: '#/components/schemas/DownloadObject'
+        ftb_type:
+          description: "The ftb data type."
+          enum: [
+            "data-blob", "data-table"
+          ]
+          type: string
+        is_based_on:
+          description: "A list of resources in which this dataset versions relates to parent resources. Only applies to ftb data type: `ftb-tables`."
+          type: array
+          items:
+            type: object
+            properties:
+              "@type":
+                description: "The resource type of the parent resource to which the version of this dataset relates to."
+                type: string
+                enum: [ "DataSet" ]
+              "@id":
+                description: "The url that relates ftb table to parent ftb blob dataset."
+                type: string
+        keywords:
+          description: "A list of keywords for a dataset"
+          type: array
+          items:
+            type: "string"
+        latest_changes:
+          description: "A list of changes between version of an edition for a dataset and the previous version of the same dataset edition"
+          type: array
+          items:
+            $ref: '#/components/schemas/LatestChange'
+        license:
+          description: "The standard Government license right text for the dataset"
+          type: string
+        links:
+          $ref: '#/components/schemas/MetadataLinks'
+        methodologies:
+          description: "A list of methodologies for a dataset"
+          type: array
+          items:
+            type: object
+            properties:
+              description:
+                description: "The description of a methodology"
+                type: string
+              href:
+                description: "The url to a methodology"
+                type: string
+              title:
+                description: "The title of a methodology"
+                type: string
+        national_statistic:
+          description: "The flag indicating the resource is a national statistic. These are certified as compliant with the Code of Practice for Official Statistics"
+          type: boolean
+        next_release:
+          description: "The next release date for a dataset"
+          type: string
+        publications:
+          description: "A list of publications for a dataset"
+          type: array
+          items:
+            type: object
+            properties:
+              description:
+                description: "The description of a publication"
+                type: string
+              href:
+                description: "The url to a publication"
+                type: string
+              title:
+                description: "The title of a publication"
+                type: string
+        publisher:
+          $ref: '#/components/schemas/Publisher'
+        qmi:
+          description: "Object containing information on the quality and methodology index of a dataset"
+          type: object
+          properties:
+            description:
+              description: "The description of a quality and methodology index"
+              type: string
+            href:
+              description: "The url to a quality and methodology index"
+              type: string
+            title:
+              description: "The title of a quality and methodology index"
+              type: string
+        related_datasets:
+          description: "A list of objects containing information of datasets related to a dataset"
+          type: array
+          items:
+            type: object
+            properties:
+              href:
+                description: "The url to a related dataset"
+                type: string
+              title:
+                description: "The title of a related dataset"
+                type: string
+        release_date:
+          description: "The release date of this version of the dataset"
+          type: string
+        release_frequency:
+          description: "The release frequency of a dataset"
+          type: string
+        tables:
+          description: "A list of tables related to a version of dataset with an `ftb_type` of data-blob."
+          type: array
+          items:
+            type: object
+            required: [
+              href,
+              title
+            ]
+            properties:
+              href:
+                description: "The url to an ftb table version of a dataset."
+                type: string
+              title:
+                description: "The title of the ftb table version of a dataset."
+                type: string
+        temporal:
+          $ref: '#/components/schemas/Temporal'
+        theme:
+          description: "The theme for a dataset"
+          type: string
+        title:
+          description: "The title of the dataset"
+          example: "CPI"
+          type: string
+        type:
+          description: "The type of version fo dataset, either ftb or cmd."
+          enum: [
+            ftb, cmd
+          ]
+          type: string
+        unit_of_measure:
+          description: "The unit of measure for the dataset observations"
+          type: string
+        uri:
+          description: "The uri to the location of the dataset on the web"
+          type: string
+        usage_notes:
+          $ref: '#/components/schemas/UsageNotes'
+    Publisher:
+      description: "The publisher of the dataset"
+      type: object
+      properties:
+        name:
+          description: "The name of the publisher"
+          type: string
+        type:
+          description: "The type of publisher"
+          type: string
+        href:
+          description: "A link to the publishers homepage"
+          type: string
+    State:
+      description: |
+        The state of the resource, can only be one of the following:
+          * created
+          * completed (instances only)
+          * failed (instances only)
+          * edition-confirmed (instances and versions only)
+          * associated (not editions)
+          * published
+      type: string
+    Temporal:
+      description: "A list of frequencies the dataset covers for a particular period of time"
+      type: array
+      items:
+        type: object
+        properties:
+          start_date:
+            description: "The start date of the time period in which the version of the dataset covers this frequency"
+            type: string
+          end_date:
+            description: "The end date of the time period in which the version of the dataset covers this frequency"
+            type: string
+          frequency:
+            description: "The time frequency the version of the dataset covers for the period of time between start_date and end_date"
+            type: string
+    UsageNotes:
+      description: "A note relating to the dataset. This will appear in downloaded datasets"
+      type: object
+      properties:
+        title:
+          description: "The title of the note"
+          type: string
+        note:
+          description: "The content of the note"
+          type: string
+    Versions:
+      type: object
+      properties:
+        count:
+          description: "The number of versions returned for an edition of a dataset"
+          readOnly: true
+          type: integer
+        items:
+          description: "An array of Datasets"
+          type: array
+          items:
+            $ref: '#/components/schemas/Version'
+        limit:
+          description: "The number of versions requested for an edition of a dataset"
+          type: integer
+        offset:
+          description: "The first row of versions for an edition of a dataset to retrieve, starting at 0. Use this parameter as a pagination mechanism along with the limit parameter"
+          type: integer
+        total_count:
+          description: "The total number of versions for an edition of a dataset"
+          readOnly: true
+          type: integer
+    Version:
+      description: "An object containing information about published datasets from the ONS"
+      required: [
+        release_date,
+      ]
+      type: object
+      properties:
+        alerts:
+          description: "A list of alerts, for example corrections after the resource has been published"
+          type: array
+          items:
+            $ref: '#/components/schemas/Alert'
+        collection_id:
+          $ref: '#/components/schemas/CollectionID'
+        dimensions:
+          description: "A list of codelists for each dimension of this version"
+          type: array
+          items:
+            $ref: '#/components/schemas/Codelist'
+        downloads:
+          description: "A selection of download objects containing information of downloadable files."
+          type: object
+          properties:
+            csv:
+              $ref: '#/components/schemas/DownloadObject'
+            xls:
+              $ref: '#/components/schemas/DownloadObject'
+        edition:
+          description: "The dataset edition for this version"
+          readOnly: true
+          type: string
+        flexible_dimensions:
+          description: "A list of codelists for each dimension that exists for an ftb data type of `ftb-table`. To allow one to flex a version of the ftb dataset table."
+          type: array
+          items:
+            $ref: '#/components/schemas/Codelist'
+        ftb_type:
+          description: "The ftb data type."
+          enum: [
+            "data-blob", "data-table"
+          ]
+          type: string
+        id:
+          description: "The identifier for this version of an edition for a dataset"
+          type: string
+        is_based_on:
+          description: "A list of resources in which this dataset versions relates to parent resources. Only applies to ftb data type: `ftb-tables`."
+          type: array
+          items:
+            type: object
+            properties:
+              "@type":
+                description: "The resource type of the parent resource to which the version of this dataset relates to."
+                type: string
+                enum: [ "DataSet" ]
+              "@id":
+                description: "The url that relates ftb table to parent ftb blob dataset."
+                type: string
+        latest_changes:
+          description: "A list of changes between version of an edition for a dataset and the previous version of the same dataset edition"
+          type: array
+          items:
+            $ref: '#/components/schemas/LatestChange'
+        links:
+          $ref: '#/components/schemas/VersionLinks'
+        release_date:
+          description: "The release date of this version of the dataset"
+          type: string
+        state:
+          $ref: '#/components/schemas/State'
+        tables:
+          description: "A list of tables related to a version of dataset with an `ftb_type` of data-blob."
+          type: array
+          items:
+            type: object
+            required: [
+              href,
+              title
+            ]
+            properties:
+              href:
+                description: "The url to an ftb table version of a dataset."
+                type: string
+              title:
+                description: "The title of the ftb table version of a dataset."
+                type: string
+        temporal:
+          $ref: '#/components/schemas/Temporal'
+        type:
+          description: "The type of version fo dataset, either ftb or cmd."
+          enum: [
+            ftb, cmd
+          ]
+          type: string
+        version:
+          description: "A number identifying the version for an edition from a dataset"
+          example: 1
+          readOnly: true
+          type: integer
+        usage_notes:
+          description: "A list of usage notes relating to the dataset"
+          type: array
+          items:
+            $ref: '#/components/schemas/UsageNotes'
+    # Link objects
+    DatasetLinks:
+      description: "A list of links related to this resource"
+      type: object
+      properties:
+        access_rights:
+          $ref: '#/components/schemas/AccessRightsLink'
+        editions:
+          readOnly: true
+          type: object
+          properties:
+            href:
+              description: "A URL to all editions for this dataset"
+              example: "http://localhost:8080/datasets/DE3BC0B6-D6C4-4E20-917E-95D7EA8C91DC/editions"
+              type: string
+        latest_version:
+          $ref: '#/components/schemas/LatestVersionLink'
+        self:
+          $ref: '#/components/schemas/SelfLink'
+        taxonomy:
+          $ref: '#/components/schemas/TaxonomyLink'
+    EditionLinks:
+      description: "A list of links related to this resource"
+      readOnly: true
+      type: object
+      properties:
+        dataset:
+          $ref: '#/components/schemas/DatasetLink'
+        latest_version:
+          $ref: '#/components/schemas/LatestVersionLink'
+        self:
+          $ref: '#/components/schemas/SelfLink'
+        versions:
+          type: object
+          properties:
+            href:
+              description: "A URL to all versions dor an edition of a dataset"
+              example: "http://localhost:8080/datasets/DE3BC0B6-D6C4-4E20-917E-95D7EA8C91DC/edition/2017/versions"
+              type: string
+    MetadataLinks:
+      description: "A list of links related to this resource"
+      readOnly: true
+      type: object
+      properties:
+        access_right:
+          $ref: '#/components/schemas/AccessRightsLink'
+        self:
+          $ref: '#/components/schemas/SelfLink'
+        spatial:
+          $ref: '#/components/schemas/SpatialLink'
+        version:
+          $ref: '#/components/schemas/VersionLink'
+        website_version:
+          description: "A link to the location of this version of the dataset on the web"
+          type: object
+          properties:
+            href:
+              description: "The uri to the location of this version of the dataset on the web"
+              type: string
+    VersionLinks:
+      description: "A list of links related to this resource"
+      type: object
+      properties:
+        dataset:
+          $ref: '#/components/schemas/DatasetLink'
+        dimensions:
+          readOnly: true
+          type: object
+          properties:
+            href:
+              description: "A URL to list dimensions for this version"
+              example: "http://localhost:8080/datasets/DE3BC0B6-D6C4-4E20-917E-95D7EA8C91DC/editions/2017/versions/2/dimensions"
+              type: string
+        edition:
+          $ref: '#/components/schemas/EditionLink'
+        self:
+          $ref: '#/components/schemas/SelfLink'
+        spatial:
+          $ref: '#/components/schemas/SpatialLink'
+    DatasetLink:
+      description: "An object containing the dataset id and link"
+      readOnly: true
+      type: object
+      properties:
+        href:
+          description: "A URL to the parent dataset for this resource"
+          example: "http://localhost:8080/datasets/DE3BC0B6-D6C4-4E20-917E-95D7EA8C91DC"
+          type: string
+        id:
+          description: "The unique id for the dataset of this version"
+          type: string
+    EditionLink:
+      description: "An object containing the edition and link"
+      readOnly: true
+      type: object
+      properties:
+        href:
+          description: "A URL to the dataset edition for a version"
+          example: "http://localhost:8080/datasets/DE3BC0B6-D6C4-4E20-917E-95D7EA8C91DC/editions/2017"
+          type: string
+        id:
+          description: "The unique id for the dataset edition for a version"
+          type: string
+    LatestVersionLink:
+      description: "An object containing the latest version id and link"
+      type: object
+      readOnly: true
+      properties:
+        href:
+          description: "A link to the latest version and edition of the dataset"
+          example: "http://localhost:8080/datasets/DE3BC0B6-D6C4-4E20-917E-95D7EA8C91DC/editions/2017/versions/2"
+          type: string
+        id:
+          description: "The unique id for the latest version of a dataset"
+          type: "string"
+    OptionsLink:
+      description: "A list of links related to this dimension"
+      type: object
+      properties:
+        href:
+          description: "A URL to a list of options for this dimension"
+          type: string
+    SelfLink:
+      description: "A link to this resource"
+      readOnly: true
+      type: object
+      properties:
+        href:
+          description: "A URL to this resource"
+          type: string
+    SpatialLink:
+      type: object
+      properties:
+        href:
+          description: "A url to a list of geography ranges for the version of the dataset"
+          type: string
+    TaxonomyLink:
+      description: "A link to the taxonomy of the dataset"
+      type: object
+      properties:
+        href:
+          description: "A url to the taxonomy of the dataset"
+          type: string
+    VersionLink:
+      description: "The dataset version this resource belongs to"
+      type: object
+      properties:
+        href:
+          description: "A URL to the version this resource relates to"
+          type: string
+        id:
+          description: "The version number this resource relates to"
+          type: string
