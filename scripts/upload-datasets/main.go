@@ -220,7 +220,7 @@ func (api *API) createFTBDatasetBlob(ctx context.Context, mongo Mongo, ftbBlob *
 		Dimensions:    dimensions,
 		Downloads:     nil,
 		Edition:       edition,
-		FTBType:       "ftb-table",
+		FTBType:       "ftb-blob",
 		Headers:       headers,
 		ID:            versionID,
 		LatestChanges: nil,
@@ -253,7 +253,7 @@ func (api *API) createFTBDatasetBlob(ctx context.Context, mongo Mongo, ftbBlob *
 				Frequency: "Decennial",
 			},
 		},
-		Type:       "FTB",
+		Type:       "ftb",
 		UsageNotes: nil,
 		Version:    1,
 	}
@@ -525,7 +525,7 @@ func (api *API) createFTBDatasetTable(ctx context.Context, mongo Mongo, ftbBlob 
 				Frequency: "Decennial",
 			},
 		},
-		Type:       "FTB",
+		Type:       "ftb",
 		UsageNotes: nil,
 		Version:    1,
 	}
