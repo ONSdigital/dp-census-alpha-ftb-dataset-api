@@ -15,7 +15,7 @@ GET /datasets/{id}/editions/{edition}/versions/{version}/dimensions
 GET /datasets/{id}/editions/{edition}/versions/{version}/dimensions/{dimension}/options
 ```
 
-This api also has stripped back all unecessary code, such as authentication, auditting and healthchecks, with minimal updates to the data models. These new models should be backward compatible with the existing dataset API, so any cmd datasets should also be able to sit under this API and will be returned by the relevant endpoints listed above.
+This api also has stripped back all unecessary code, such as authentication, auditing and healthchecks, with minimal updates to the data models. These new models should be backward compatible with the existing dataset API, so any cmd datasets should also be able to sit under this API and will be returned by the relevant endpoints listed above.
 
 ### Requirements
 
