@@ -29,9 +29,10 @@ const (
 	versionCollection   = "instances"
 	dimOptionCollection = "dimension.options"
 
-	defaultBindAddr     = "localhost:27017"
-	defaultFTBHost      = "localhost:10100"
-	defaultFTBAuthToken = "auth-token"
+	defaultBindAddr         = "localhost:27017"
+	defaultFTBDatasetAPIURL = "localhost:10400"
+	defaultFTBHost          = "localhost:10100"
+	defaultFTBAuthToken     = "auth-token"
 
 	edition          = "2011"
 	license          = "Open Government Licence v3.0"
@@ -41,7 +42,7 @@ const (
 )
 
 var (
-	bindAddr, ftbHost, ftbAuthToken string
+	bindAddr, datasetAPIURL, ftbHost, ftbAuthToken string
 
 	nationalStatistic = true
 	publisher         = models.Publisher{
@@ -60,10 +61,15 @@ func main() {
 	flag.StringVar(&bindAddr, "mongodb-bind", defaultBindAddr, "the address including authorisation if needed to bind to mongo database")
 	flag.StringVar(&ftbHost, "ftb-host", defaultFTBHost, "the url to the FTB database")
 	flag.StringVar(&ftbAuthToken, "ftb-auth-token", defaultFTBAuthToken, "the authorisation token to access FTB API")
+	flag.StringVar(&datasetAPIURL, "ftb-dataset-api-url", defaultFTBDatasetAPIURL, "the url to the FTB dataset API")
 	flag.Parse()
 
 	if bindAddr == "" {
 		bindAddr = defaultBindAddr
+	}
+
+	if datasetAPIURL == "" {
+		datasetAPIURL = defaultFTBDatasetAPIURL
 	}
 
 	if ftbHost == "" {
@@ -226,22 +232,22 @@ func (api *API) createFTBDatasetBlob(ctx context.Context, mongo Mongo, ftbBlob *
 		LatestChanges: nil,
 		Links: &models.VersionLinks{
 			Dataset: &models.LinkObject{
-				HRef: "http://localhost:10400/datasets/" + datasetID,
+				HRef: datasetAPIURL + "/datasets/" + datasetID,
 				ID:   datasetID,
 			},
 			Dimensions: &models.LinkObject{
-				HRef: "http://localhost:10400/datasets/" + datasetID + "/editions/" + edition + "/versions/1/dimensions",
+				HRef: datasetAPIURL + "/datasets/" + datasetID + "/editions/" + edition + "/versions/1/dimensions",
 			},
 			Edition: &models.LinkObject{
-				HRef: "http://localhost:10400/datasets/" + datasetID + "/editions/" + edition,
+				HRef: datasetAPIURL + "/datasets/" + datasetID + "/editions/" + edition,
 				ID:   edition,
 			},
 			Self: &models.LinkObject{
-				HRef: "http://localhost:10400/instances/" + versionID,
+				HRef: datasetAPIURL + "/instances/" + versionID,
 			},
 			Spatial: nil,
 			Version: &models.LinkObject{
-				HRef: "http://localhost:10400/datasets/" + datasetID + "/editions/" + edition + "/versions/1",
+				HRef: datasetAPIURL + "/datasets/" + datasetID + "/editions/" + edition + "/versions/1",
 				ID:   "1",
 			},
 		},
@@ -281,14 +287,14 @@ func (api *API) createFTBDatasetBlob(ctx context.Context, mongo Mongo, ftbBlob *
 		License:     license,
 		Links: &models.DatasetLinks{
 			Editions: &models.LinkObject{
-				HRef: "http://localhost:10400/datasets/" + datasetID + "/editions",
+				HRef: datasetAPIURL + "/datasets/" + datasetID + "/editions",
 			},
 			LatestVersion: &models.LinkObject{
-				HRef: "http://localhost:10400/datasets/" + datasetID + "/editions/" + edition + "/versions/1",
+				HRef: datasetAPIURL + "/datasets/" + datasetID + "/editions/" + edition + "/versions/1",
 				ID:   "1",
 			},
 			Self: &models.LinkObject{
-				HRef: "http://localhost:10400/datasets/" + datasetID,
+				HRef: datasetAPIURL + "/datasets/" + datasetID,
 			},
 			Taxonomy: &models.LinkObject{},
 		},
@@ -330,18 +336,18 @@ func (api *API) createFTBDatasetBlob(ctx context.Context, mongo Mongo, ftbBlob *
 		FTBType: "ftb-blob",
 		Links: &models.EditionUpdateLinks{
 			Dataset: &models.LinkObject{
-				HRef: "http://localhost:10400/datasets/" + datasetID,
+				HRef: datasetAPIURL + "/datasets/" + datasetID,
 				ID:   datasetID,
 			},
 			LatestVersion: &models.LinkObject{
-				HRef: "http://localhost:10400/datasets/" + datasetID + "/editions/" + edition + "/versions/1",
+				HRef: datasetAPIURL + "/datasets/" + datasetID + "/editions/" + edition + "/versions/1",
 				ID:   "1",
 			},
 			Self: &models.LinkObject{
-				HRef: "http://localhost:10400/datasets/" + datasetID + "/editions/" + edition,
+				HRef: datasetAPIURL + "/datasets/" + datasetID + "/editions/" + edition,
 			},
 			Versions: &models.LinkObject{
-				HRef: "http://localhost:10400/datasets/" + datasetID + "/editions/" + edition + "/versions",
+				HRef: datasetAPIURL + "/datasets/" + datasetID + "/editions/" + edition + "/versions",
 			},
 		},
 		State:  "published",
@@ -395,7 +401,7 @@ func (api *API) createFTBDatasetBlob(ctx context.Context, mongo Mongo, ftbBlob *
 						ID:   ftbOptions.Dimensions[0].Name,
 					},
 					Version: models.LinkObject{
-						HRef: "http://localhost:10400/datasets/" + datasetID + "/editions/" + edition + "/versions/1",
+						HRef: datasetAPIURL + "/datasets/" + datasetID + "/editions/" + edition + "/versions/1",
 						ID:   "1",
 					},
 				},
@@ -498,22 +504,22 @@ func (api *API) createFTBDatasetTable(ctx context.Context, mongo Mongo, ftbBlob 
 		LatestChanges: nil,
 		Links: &models.VersionLinks{
 			Dataset: &models.LinkObject{
-				HRef: "http://localhost:10400/datasets/" + datasetID,
+				HRef: datasetAPIURL + "/datasets/" + datasetID,
 				ID:   datasetID,
 			},
 			Dimensions: &models.LinkObject{
-				HRef: "http://localhost:10400/datasets/" + datasetID + "/editions/" + edition + "/versions/1/dimensions",
+				HRef: datasetAPIURL + "/datasets/" + datasetID + "/editions/" + edition + "/versions/1/dimensions",
 			},
 			Edition: &models.LinkObject{
-				HRef: "http://localhost:10400/datasets/" + datasetID + "/editions/" + edition,
+				HRef: datasetAPIURL + "/datasets/" + datasetID + "/editions/" + edition,
 				ID:   edition,
 			},
 			Self: &models.LinkObject{
-				HRef: "http://localhost:10400/instances/" + versionID,
+				HRef: datasetAPIURL + "/instances/" + versionID,
 			},
 			Spatial: nil,
 			Version: &models.LinkObject{
-				HRef: "http://localhost:10400/datasets/" + datasetID + "/editions/" + edition + "/versions/1",
+				HRef: datasetAPIURL + "/datasets/" + datasetID + "/editions/" + edition + "/versions/1",
 				ID:   "1",
 			},
 		},
@@ -559,14 +565,14 @@ func (api *API) createFTBDatasetTable(ctx context.Context, mongo Mongo, ftbBlob 
 		License:  license,
 		Links: &models.DatasetLinks{
 			Editions: &models.LinkObject{
-				HRef: "http://localhost:10400/datasets/" + datasetID + "/editions",
+				HRef: datasetAPIURL + "/datasets/" + datasetID + "/editions",
 			},
 			LatestVersion: &models.LinkObject{
-				HRef: "http://localhost:10400/datasets/" + datasetID + "/editions/" + edition + "/versions/1",
+				HRef: datasetAPIURL + "/datasets/" + datasetID + "/editions/" + edition + "/versions/1",
 				ID:   "1",
 			},
 			Self: &models.LinkObject{
-				HRef: "http://localhost:10400/datasets/" + datasetID,
+				HRef: datasetAPIURL + "/datasets/" + datasetID,
 			},
 			Taxonomy: &models.LinkObject{},
 		},
@@ -611,18 +617,18 @@ func (api *API) createFTBDatasetTable(ctx context.Context, mongo Mongo, ftbBlob 
 		},
 		Links: &models.EditionUpdateLinks{
 			Dataset: &models.LinkObject{
-				HRef: "http://localhost:10400/datasets/" + datasetID,
+				HRef: datasetAPIURL + "/datasets/" + datasetID,
 				ID:   datasetID,
 			},
 			LatestVersion: &models.LinkObject{
-				HRef: "http://localhost:10400/datasets/" + datasetID + "/editions/" + edition + "/versions/1",
+				HRef: datasetAPIURL + "/datasets/" + datasetID + "/editions/" + edition + "/versions/1",
 				ID:   "1",
 			},
 			Self: &models.LinkObject{
-				HRef: "http://localhost:10400/datasets/" + datasetID + "/editions/" + edition,
+				HRef: datasetAPIURL + "/datasets/" + datasetID + "/editions/" + edition,
 			},
 			Versions: &models.LinkObject{
-				HRef: "http://localhost:10400/datasets/" + datasetID + "/editions/" + edition + "/versions",
+				HRef: datasetAPIURL + "/datasets/" + datasetID + "/editions/" + edition + "/versions",
 			},
 		},
 		State: "published",
@@ -674,7 +680,7 @@ func (api *API) createFTBDatasetTable(ctx context.Context, mongo Mongo, ftbBlob 
 						ID:   ftbOptions.Dimensions[0].Name,
 					},
 					Version: models.LinkObject{
-						HRef: "http://localhost:10400/datasets/" + datasetID + "/editions/" + edition + "/versions/1",
+						HRef: datasetAPIURL + "/datasets/" + datasetID + "/editions/" + edition + "/versions/1",
 						ID:   "1",
 					},
 				},
@@ -708,17 +714,17 @@ func (api *API) createFTBDatasetTable(ctx context.Context, mongo Mongo, ftbBlob 
 	log.Event(ctx, "successfully completed loading ftb data table", log.INFO)
 
 	datasetFTBTable = models.Table{
-		HRef:  "http://localhost:10400/datasets/" + datasetID,
+		HRef:  datasetAPIURL + "/datasets/" + datasetID,
 		Title: tableData.title,
 	}
 
 	editionFTBTable = models.Table{
-		HRef:  "http://localhost:10400/datasets/" + datasetID + "/editions/" + edition,
+		HRef:  datasetAPIURL + "/datasets/" + datasetID + "/editions/" + edition,
 		Title: tableData.title,
 	}
 
 	versionFTBTable = models.Table{
-		HRef:  "http://localhost:10400/datasets/" + datasetID + "/editions/" + edition + "/versions/1",
+		HRef:  datasetAPIURL + "/datasets/" + datasetID + "/editions/" + edition + "/versions/1",
 		Title: tableData.title,
 	}
 

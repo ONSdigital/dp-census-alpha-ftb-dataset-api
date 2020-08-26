@@ -13,15 +13,16 @@ This script retrieves a People FTB data blob stored in the FTB datasetore and wi
 You can run either of the following commands:
 
 - Use Makefile
-    - Set `mongodb_bind_addr`, `ftb_auth_token` and `ftb_host` environment variables with:
+    - Set `mongodb_bind_addr`, `FTBDATASET_API_URL`, `ftb_auth_token` and `ftb_host` environment variables with:
     ```
     export mongodb_bind_addr=<mongodb bind address>
+    export FTBDATASET_API_URL=<ftb dataset api url - host:port> // This should be the location of the ftb dataset API application e.g. "localhost:10400"
     export ftb_auth_token=<ftb auth token>
-    export ftb_host=<ftb host and port> e.g. `localhost:10100`
+    export ftb_host=<ftb host and port> e.g. "localhost:10100"
     ```
     - Run `make upload-datasets`
-- Use go run command with or without flags `-mongodb-bind-addr`, `-ftb-auth-token` and `-ftb-host` being set
-    - `go run retrieve-cmd-datasets/main.go -mongodb-bind-addr=<mongodb bind address> -ftb-auth-token=<ftb auth token> -ftb-host=<ftb host and port>`
+- Use go run command with or without flags `-mongodb-bind-addr`, `-ftb-dataset-api-url`, `-ftb-auth-token` and `-ftb-host` being set
+    - `go run retrieve-cmd-datasets/main.go -mongodb-bind-addr=<mongodb bind address> -ftb-dataset-api-url=<ftb dataset api url> -ftb-auth-token=<ftb auth token> -ftb-host=<ftb host and port>`
     
 if you do not set the flags or environment variables for mongodb bind address and ftb host , the script will use a default value set to `localhost:27017` and `localhost:10100` respectively. You must provide the auth token to gain access to the ftb service, this does not need to include the term `Bearer ` prepended to the randomly generated unique identifier. Please read the [census alpha api proxy documentation on how to obtain token](https://github.com/ONSdigital/dp-census-alpha-api-proxy).
 
