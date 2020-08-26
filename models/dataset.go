@@ -63,8 +63,10 @@ type Dataset struct {
 	CollectionID      string           `bson:"collection_id,omitempty"          json:"collection_id,omitempty"`
 	Contacts          []ContactDetails `bson:"contacts,omitempty"               json:"contacts,omitempty"`
 	Description       string           `bson:"description,omitempty"            json:"description,omitempty"`
-	Keywords          []string         `bson:"keywords,omitempty"               json:"keywords,omitempty"`
+	FTBType           string           `bson:"ftb_type,omitempty"               json:"ftb_type,omitempty"`
 	ID                string           `bson:"_id,omitempty"                    json:"id,omitempty"`
+	IsBasedOn         *[]IsBasedOn     `bson:"is_based_on,omitempty"            json:"is_based_on,omitempty"`
+	Keywords          []string         `bson:"keywords,omitempty"               json:"keywords,omitempty"`
 	LastUpdated       time.Time        `bson:"last_updated,omitempty"           json:"-"`
 	License           string           `bson:"license,omitempty"                json:"license,omitempty"`
 	Links             *DatasetLinks    `bson:"links,omitempty"                  json:"links,omitempty"`
@@ -78,7 +80,9 @@ type Dataset struct {
 	ReleaseFrequency  string           `bson:"release_frequency,omitempty"      json:"release_frequency,omitempty"`
 	State             string           `bson:"state,omitempty"                  json:"state,omitempty"`
 	Theme             string           `bson:"theme,omitempty"                  json:"theme,omitempty"`
+	Tables            *[]Table         `bson:"tables,omitempty"                 json:"tables,omitempty"`
 	Title             string           `bson:"title,omitempty"                  json:"title,omitempty"`
+	Type              string           `bson:"type,omitempty"                   json:"type,omitempty"`
 	UnitOfMeasure     string           `bson:"unit_of_measure,omitempty"        json:"unit_of_measure,omitempty"`
 	URI               string           `bson:"uri,omitempty"                    json:"uri,omitempty"`
 }
@@ -121,6 +125,18 @@ type ContactDetails struct {
 	Telephone string `bson:"telephone,omitempty"  json:"telephone,omitempty"`
 }
 
+// IsBasedOn represents an object containing information regarding data that this resource related(is based on) to
+type IsBasedOn struct {
+	ID   string `bson:"@id,omitempty"     json:"@id,omitempty"`
+	Type string `bson:"@type,omitempty"   json:"@type,omitempty"`
+}
+
+// Table represents an object containing information of an FTB dataset table
+type Table struct {
+	HRef  string `bson:"href,omitempty"      json:"href,omitempty"`
+	Title string `bson:"title,omitempty"     json:"title,omitempty"`
+}
+
 // EditionUpdate represents an evolving edition containing both the next and current edition
 type EditionUpdate struct {
 	ID      string   `bson:"id,omitempty"         json:"id,omitempty"`
@@ -138,11 +154,15 @@ type EditionUpdateLinks struct {
 
 // Edition represents information related to a single edition for a dataset
 type Edition struct {
-	Edition     string              `bson:"edition,omitempty"     json:"edition,omitempty"`
-	ID          string              `bson:"id,omitempty"          json:"id,omitempty"`
+	Edition     string              `bson:"edition,omitempty"      json:"edition,omitempty"`
+	FTBType     string              `bson:"ftb_type,omitempty"     json:"ftb_type,omitempty"`
+	ID          string              `bson:"id,omitempty"           json:"id,omitempty"`
+	IsBasedOn   *[]IsBasedOn        `bson:"is_based_on,omitempty"  json:"is_based_on,omitempty"`
 	LastUpdated time.Time           `bson:"last_updated,omitempty" json:"-"`
-	Links       *EditionUpdateLinks `bson:"links,omitempty"       json:"links,omitempty"`
+	Links       *EditionUpdateLinks `bson:"links,omitempty"        json:"links,omitempty"`
 	State       string              `bson:"state,omitempty"        json:"state,omitempty"`
+	Tables      *[]Table            `bson:"tables,omitempty"       json:"tables,omitempty"`
+	Type        string              `bson:"type,omitempty"         json:"type,omitempty"`
 }
 
 // Publisher represents an object containing information of the publisher
@@ -154,21 +174,26 @@ type Publisher struct {
 
 // Version represents information related to a single version for an edition of a dataset
 type Version struct {
-	Alerts        *[]Alert             `bson:"alerts,omitempty"         json:"alerts,omitempty"`
-	CollectionID  string               `bson:"collection_id,omitempty"  json:"collection_id,omitempty"`
-	Dimensions    []Dimension          `bson:"dimensions,omitempty"     json:"dimensions,omitempty"`
-	Downloads     *DownloadList        `bson:"downloads,omitempty"      json:"downloads,omitempty"`
-	Edition       string               `bson:"edition,omitempty"        json:"edition,omitempty"`
-	Headers       []string             `bson:"headers,omitempty"        json:"-"`
-	ID            string               `bson:"id,omitempty"             json:"id,omitempty"`
-	LastUpdated   time.Time            `bson:"last_updated,omitempty"   json:"-"`
-	LatestChanges *[]LatestChange      `bson:"latest_changes,omitempty" json:"latest_changes,omitempty"`
-	Links         *VersionLinks        `bson:"links,omitempty"          json:"links,omitempty"`
-	ReleaseDate   string               `bson:"release_date,omitempty"   json:"release_date,omitempty"`
-	State         string               `bson:"state,omitempty"          json:"state,omitempty"`
-	Temporal      *[]TemporalFrequency `bson:"temporal,omitempty"       json:"temporal,omitempty"`
-	UsageNotes    *[]UsageNote         `bson:"usage_notes,omitempty"    json:"usage_notes,omitempty"`
-	Version       int                  `bson:"version,omitempty"        json:"version,omitempty"`
+	Alerts         *[]Alert             `bson:"alerts,omitempty"              json:"alerts,omitempty"`
+	CollectionID   string               `bson:"collection_id,omitempty"       json:"collection_id,omitempty"`
+	Dimensions     []Dimension          `bson:"dimensions,omitempty"          json:"dimensions,omitempty"`
+	FlexDimensions *[]Dimension         `bson:"flexible_dimensions,omitempty" json:"flexible_dimensions,omitempty"`
+	Downloads      *DownloadList        `bson:"downloads,omitempty"           json:"downloads,omitempty"`
+	Edition        string               `bson:"edition,omitempty"             json:"edition,omitempty"`
+	FTBType        string               `bson:"ftb_type,omitempty"            json:"ftb_type,omitempty"`
+	Headers        []string             `bson:"headers,omitempty"             json:"-"`
+	ID             string               `bson:"id,omitempty"                  json:"id,omitempty"`
+	IsBasedOn      *[]IsBasedOn         `bson:"is_based_on,omitempty"         json:"is_based_on,omitempty"`
+	LastUpdated    time.Time            `bson:"last_updated,omitempty"        json:"-"`
+	LatestChanges  *[]LatestChange      `bson:"latest_changes,omitempty"      json:"latest_changes,omitempty"`
+	Links          *VersionLinks        `bson:"links,omitempty"               json:"links,omitempty"`
+	ReleaseDate    string               `bson:"release_date,omitempty"        json:"release_date,omitempty"`
+	State          string               `bson:"state,omitempty"               json:"state,omitempty"`
+	Tables         *[]Table             `bson:"tables,omitempty"              json:"tables,omitempty"`
+	Temporal       *[]TemporalFrequency `bson:"temporal,omitempty"            json:"temporal,omitempty"`
+	Type           string               `bson:"type,omitempty"                json:"type,omitempty"`
+	UsageNotes     *[]UsageNote         `bson:"usage_notes,omitempty"         json:"usage_notes,omitempty"`
+	Version        int                  `bson:"version,omitempty"             json:"version,omitempty"`
 }
 
 // Alert represents an object containing information on an alert

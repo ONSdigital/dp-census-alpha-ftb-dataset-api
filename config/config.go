@@ -41,7 +41,7 @@ func Get() (*Configuration, error) {
 		MongoConfig: MongoConfig{
 			BindAddr:   "localhost:27017",
 			Collection: "datasets",
-			Database:   "datasets",
+			Database:   "ftb-datasets",
 		},
 	}
 

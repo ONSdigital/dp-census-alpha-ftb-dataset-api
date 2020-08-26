@@ -14,6 +14,8 @@ type Metadata struct {
 	Dimensions        []Dimension          `json:"dimensions,omitempty"`
 	Distribution      []string             `json:"distribution,omitempty"`
 	Downloads         *DownloadList        `json:"downloads,omitempty"`
+	FTBType           string               `json:"ftb_type,omitempty"`
+	IsBasedOn         *[]IsBasedOn         `json:"is_based_on,omitempty"`
 	Keywords          []string             `json:"keywords,omitempty"`
 	LatestChanges     *[]LatestChange      `json:"latest_changes,omitempty"`
 	License           string               `json:"license,omitempty"`
@@ -27,9 +29,11 @@ type Metadata struct {
 	RelatedDatasets   []GeneralDetails     `json:"related_datasets,omitempty"`
 	ReleaseDate       string               `json:"release_date,omitempty"`
 	ReleaseFrequency  string               `json:"release_frequency,omitempty"`
+	Tables            *[]Table             `json:"tables,omitempty"`
 	Temporal          *[]TemporalFrequency `json:"temporal,omitempty"`
 	Theme             string               `json:"theme,omitempty"`
 	Title             string               `json:"title,omitempty"`
+	Type              string               `json:"type,omitempty"`
 	UnitOfMeasure     string               `json:"unit_of_measure,omitempty"`
 	URI               string               `json:"uri,omitempty"`
 	UsageNotes        *[]UsageNote         `json:"usage_notes,omitempty"`
@@ -52,6 +56,8 @@ func CreateMetaDataDoc(datasetDoc *Dataset, versionDoc *Version, urlBuilder *url
 		Description:       datasetDoc.Description,
 		Dimensions:        versionDoc.Dimensions,
 		Downloads:         versionDoc.Downloads,
+		FTBType:           versionDoc.FTBType,
+		IsBasedOn:         versionDoc.IsBasedOn,
 		Keywords:          datasetDoc.Keywords,
 		LatestChanges:     versionDoc.LatestChanges,
 		Links:             &MetadataLinks{},
@@ -65,9 +71,11 @@ func CreateMetaDataDoc(datasetDoc *Dataset, versionDoc *Version, urlBuilder *url
 		RelatedDatasets:   datasetDoc.RelatedDatasets,
 		ReleaseDate:       versionDoc.ReleaseDate,
 		ReleaseFrequency:  datasetDoc.ReleaseFrequency,
+		Tables:            versionDoc.Tables,
 		Temporal:          versionDoc.Temporal,
 		Theme:             datasetDoc.Theme,
 		Title:             datasetDoc.Title,
+		Type:              versionDoc.Type,
 		UnitOfMeasure:     datasetDoc.UnitOfMeasure,
 		URI:               datasetDoc.URI,
 		UsageNotes:        versionDoc.UsageNotes,
