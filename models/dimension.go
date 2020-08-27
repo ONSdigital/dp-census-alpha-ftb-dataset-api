@@ -55,7 +55,7 @@ type DimensionOption struct {
 	Option      string               `bson:"option,omitempty"         json:"option"`
 }
 
-// PublicDimensionOption hides values which are only used by interval services
+// PublicDimensionOption hides values which are only used by internal services
 type PublicDimensionOption struct {
 	Label  string               `bson:"label,omitempty"          json:"label"`
 	Links  DimensionOptionLinks `bson:"links,omitempty"          json:"links"`

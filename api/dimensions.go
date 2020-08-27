@@ -75,9 +75,11 @@ func (api *FTBDatasetAPI) createListOfDimensions(versionDoc *models.Version, dim
 	// Get dimension description from the version document and add to hash map
 	dimensionDescriptions := make(map[string]string)
 	dimensionLabels := make(map[string]string)
+	dimensionOptionsCount := make(map[string]int)
 	for _, details := range versionDoc.Dimensions {
-		dimensionDescriptions[details.Name] = details.Description
-		dimensionLabels[details.Name] = details.Label
+		dimensionDescriptions[details.ID] = details.Description
+		dimensionLabels[details.ID] = details.Label
+		dimensionOptionsCount[details.ID] = details.NumberOfOptions
 	}
 
 	var results []models.Dimension
@@ -94,9 +96,10 @@ func (api *FTBDatasetAPI) createListOfDimensions(versionDoc *models.Version, dim
 		dimension.Links.Version = models.LinkObject{HRef: fmt.Sprintf("%s/datasets/%s/editions/%s/versions/%s",
 			api.host, versionDoc.Links.Dataset.ID, versionDoc.Edition, versionDoc.Links.Version.ID)}
 
-		// Add description to dimension from hash map
+		// Add description, label and dimension option counts to dimension from hash maps
 		dimension.Description = dimensionDescriptions[dimension.Name]
 		dimension.Label = dimensionLabels[dimension.Name]
+		dimension.NumberOfOptions = dimensionOptionsCount[dimension.Name]
 
 		results = append(results, dimension)
 	}
