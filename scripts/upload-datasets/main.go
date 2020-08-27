@@ -466,6 +466,35 @@ func (api *API) createFTBDatasetTable(ctx context.Context, mongo Mongo, ftbBlob 
 
 	dimensionOptionCounts := make(map[string]int)
 
+	count := 0
+	for _, dim := range ftbBlob.Dimensions {
+		if _, ok := tableData.dimensions[dim.Name]; !ok {
+			continue
+		}
+		count++
+		dimension := models.Dimension{
+			Description:     "",
+			HRef:            "http://localhost:22400/code-lists/" + dim.Name,
+			ID:              dim.Name,
+			Name:            dim.Label,
+			Label:           dim.Label,
+			NumberOfOptions: dimensionOptionCounts[dim.Name],
+		}
+		if len(dim.MapFrom) < 1 {
+			dimension.Category = dim.Name
+		} else {
+			dimension.Category = dim.MapFrom[0]
+		}
+
+		keywords = append(keywords, strings.ToLower(dimension.Category))
+		dimensions = append(dimensions, dimension)
+		headers = append(headers, dim.Name)
+	}
+
+	if len(tableData.dimensions) != count {
+		return datasetFTBTable, editionFTBTable, versionFTBTable, errors.New("Dimension not found to create ftb dataset table")
+	}
+
 	// Create Dimension Options
 	for _, dim := range dimensions {
 		// Get dimension options
@@ -529,35 +558,6 @@ func (api *API) createFTBDatasetTable(ctx context.Context, mongo Mongo, ftbBlob 
 
 			options = nil
 		}
-	}
-
-	count := 0
-	for _, dim := range ftbBlob.Dimensions {
-		if _, ok := tableData.dimensions[dim.Name]; !ok {
-			continue
-		}
-		count++
-		dimension := models.Dimension{
-			Description:     "",
-			HRef:            "http://localhost:22400/code-lists/" + dim.Name,
-			ID:              dim.Name,
-			Name:            dim.Label,
-			Label:           dim.Label,
-			NumberOfOptions: dimensionOptionCounts[dim.Name],
-		}
-		if len(dim.MapFrom) < 1 {
-			dimension.Category = dim.Name
-		} else {
-			dimension.Category = dim.MapFrom[0]
-		}
-
-		keywords = append(keywords, strings.ToLower(dimension.Category))
-		dimensions = append(dimensions, dimension)
-		headers = append(headers, dim.Name)
-	}
-
-	if len(tableData.dimensions) != count {
-		return datasetFTBTable, editionFTBTable, versionFTBTable, errors.New("Dimension not found to create ftb dataset table")
 	}
 
 	versionDoc := &models.Version{
