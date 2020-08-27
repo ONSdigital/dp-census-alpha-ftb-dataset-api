@@ -30,7 +30,7 @@ const (
 	dimOptionCollection = "dimension.options"
 
 	defaultBindAddr         = "localhost:27017"
-	defaultFTBDatasetAPIURL = "localhost:10400"
+	defaultFTBDatasetAPIURL = "http://localhost:10400"
 	defaultFTBHost          = "localhost:10100"
 	defaultFTBAuthToken     = "auth-token"
 
