@@ -464,8 +464,6 @@ func (api *API) createFTBDatasetTable(ctx context.Context, mongo Mongo, ftbBlob 
 
 	var datasetFTBTable, editionFTBTable, versionFTBTable models.Table
 
-	dimensionOptionCounts := make(map[string]int)
-
 	count := 0
 	for _, dim := range ftbBlob.Dimensions {
 		if _, ok := tableData.dimensions[dim.Name]; !ok {
@@ -473,12 +471,11 @@ func (api *API) createFTBDatasetTable(ctx context.Context, mongo Mongo, ftbBlob 
 		}
 		count++
 		dimension := models.Dimension{
-			Description:     "",
-			HRef:            "http://localhost:22400/code-lists/" + dim.Name,
-			ID:              dim.Name,
-			Name:            dim.Label,
-			Label:           dim.Label,
-			NumberOfOptions: dimensionOptionCounts[dim.Name],
+			Description: "",
+			HRef:        "http://localhost:22400/code-lists/" + dim.Name,
+			ID:          dim.Name,
+			Name:        dim.Label,
+			Label:       dim.Label,
 		}
 		if len(dim.MapFrom) < 1 {
 			dimension.Category = dim.Name
@@ -495,6 +492,8 @@ func (api *API) createFTBDatasetTable(ctx context.Context, mongo Mongo, ftbBlob 
 		return datasetFTBTable, editionFTBTable, versionFTBTable, errors.New("Dimension not found to create ftb dataset table")
 	}
 
+	var dimensionsWithOptionCounts []models.Dimension
+
 	// Create Dimension Options
 	for _, dim := range dimensions {
 		// Get dimension options
@@ -504,9 +503,11 @@ func (api *API) createFTBDatasetTable(ctx context.Context, mongo Mongo, ftbBlob 
 			return datasetFTBTable, editionFTBTable, versionFTBTable, err
 		}
 
-		log.Event(ctx, "got dimension", log.Data{"dimension_name": ftbOptions.Dimensions[0].Name, "dimension_label": ftbOptions.Dimensions[0].Label, "label_count": len(ftbOptions.Dimensions[0].Labels), "code_count": len(ftbOptions.Dimensions[0].Codes)})
+		dim.NumberOfOptions = len(ftbOptions.Dimensions[0].Codes)
+		dimensionsWithOptionCounts = append(dimensionsWithOptionCounts, dim)
 
 		options := make([]interface{}, 500)
+
 		// Add each dimension option to mongo
 		for i, option := range ftbOptions.Dimensions[0].Codes {
 
@@ -562,7 +563,7 @@ func (api *API) createFTBDatasetTable(ctx context.Context, mongo Mongo, ftbBlob 
 
 	versionDoc := &models.Version{
 		CollectionID:   collectionID,
-		Dimensions:     dimensions,
+		Dimensions:     dimensionsWithOptionCounts,
 		Downloads:      nil,
 		Edition:        edition,
 		FTBType:        "ftb-table",
