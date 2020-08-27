@@ -87,7 +87,7 @@ func (api *FTBDatasetAPI) createListOfDimensions(versionDoc *models.Version, dim
 			return nil, err
 		}
 
-		dimension := models.Dimension{Name: opt.Name}
+		dimension := models.Dimension{Name: opt.Name, Links: &models.DimensionLink{}}
 		dimension.Links.CodeList = opt.Links.CodeList
 		dimension.Links.Options = models.LinkObject{ID: opt.Name, HRef: fmt.Sprintf("%s/datasets/%s/editions/%s/versions/%s/dimensions/%s/options",
 			api.host, versionDoc.Links.Dataset.ID, versionDoc.Edition, versionDoc.Links.Version.ID, opt.Name)}
