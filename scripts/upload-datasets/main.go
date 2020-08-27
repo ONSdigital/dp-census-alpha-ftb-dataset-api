@@ -196,16 +196,91 @@ type FTBBlob struct {
 
 func (api *API) createFTBDatasetBlob(ctx context.Context, mongo Mongo, ftbBlob *FTBData) (tableData TableData, err error) {
 	// Create dataset version
+	datasetID := ftbBlob.Dataset.Name
+	versionID := uuid.NewV4().String()
+	collectionID := uuid.NewV4().String()
+
 	dimensions := []models.Dimension{}
 	headers := []string{"ftb-blob"}
 
+	dimensionOptionCounts := make(map[string]int)
+
+	// Create Dimension Options
+	for _, dim := range ftbBlob.Dimensions {
+		// Get dimension options
+		var ftbOptions *FTBData
+		ftbOptions, err = api.retrieveDimensionOptions(ctx, dim.Name)
+		if err != nil {
+			log.Event(ctx, "failed to retrieve dimension options document", log.ERROR, log.Error(err))
+			return
+		}
+
+		dimensionOptionCounts[dim.Name] = len(ftbOptions.Dimensions[0].Codes)
+
+		log.Event(ctx, "got dimension", log.Data{"dimension_name": ftbOptions.Dimensions[0].Name, "dimension_label": ftbOptions.Dimensions[0].Label, "label_count": len(ftbOptions.Dimensions[0].Labels), "code_count": len(ftbOptions.Dimensions[0].Codes)})
+
+		options := make([]interface{}, 500)
+		// Add each dimension option to mongo
+		for i, option := range ftbOptions.Dimensions[0].Codes {
+
+			label := ftbOptions.Dimensions[0].Codes[i]
+			if len(ftbOptions.Dimensions[0].Labels) > 0 {
+				label = ftbOptions.Dimensions[0].Labels[i]
+			}
+			dimensionOption := &models.DimensionOption{
+				InstanceID:  versionID,
+				Label:       label,
+				LastUpdated: time.Now().UTC(),
+				Links: models.DimensionOptionLinks{
+					Code: models.LinkObject{
+						HRef: fmt.Sprintf("%s/code-lists/%s/codes/%s", mongo.CodeListURL, ftbOptions.Dimensions[0].Name, option),
+						ID:   option,
+					},
+					CodeList: models.LinkObject{
+						HRef: fmt.Sprintf("%s/code-lists/%s", mongo.CodeListURL, ftbOptions.Dimensions[0].Name),
+						ID:   ftbOptions.Dimensions[0].Name,
+					},
+					Version: models.LinkObject{
+						HRef: datasetAPIURL + "/datasets/" + datasetID + "/editions/" + edition + "/versions/1",
+						ID:   "1",
+					},
+				},
+				Name:   ftbOptions.Dimensions[0].Name,
+				Option: option,
+			}
+
+			options = append(options, dimensionOption)
+
+			// Do a bulk upload of 500 documents at a time to speed the process of loading data into mongo db
+			if len(options) == 500 {
+				if err = mongo.BulkInsertDimensionOptions(options); err != nil {
+					log.Event(ctx, "failed to add dimension options in bulk request to mongo db", log.ERROR, log.Error(err))
+					return
+				}
+
+				options = nil
+			}
+		}
+
+		// Add leftover docs to mongo
+		if len(options) != 0 {
+			if err = mongo.BulkInsertDimensionOptions(options); err != nil {
+				log.Event(ctx, "failed to add last set of dimension options in bulk request to mongo db", log.ERROR, log.Error(err))
+				return
+			}
+
+			options = nil
+		}
+	}
+
 	for _, dim := range ftbBlob.Dimensions {
 		dimension := models.Dimension{
-			Description: "",
-			HRef:        "http://localhost:22400/code-lists/" + dim.Name,
-			ID:          dim.Name,
-			Name:        dim.Label,
-			Label:       dim.Label,
+			Description:     "",
+			HRef:            "http://localhost:22400/code-lists/" + dim.Name,
+			ID:              dim.Name,
+			Name:            dim.Label,
+			Label:           dim.Label,
+			NumberOfOptions: dimensionOptionCounts[dim.Name],
 		}
 		if len(dim.MapFrom) < 1 {
 			dimension.Category = dim.Name
@@ -216,10 +291,6 @@ func (api *API) createFTBDatasetBlob(ctx context.Context, mongo Mongo, ftbBlob *
 		dimensions = append(dimensions, dimension)
 		headers = append(headers, dim.Name)
 	}
-
-	datasetID := ftbBlob.Dataset.Name
-	versionID := uuid.NewV4().String()
-	collectionID := uuid.NewV4().String()
 
 	versionDoc := &models.Version{
 		CollectionID:  collectionID,
@@ -367,14 +438,41 @@ func (api *API) createFTBDatasetBlob(ctx context.Context, mongo Mongo, ftbBlob *
 		return
 	}
 
+	log.Event(ctx, "successfully completed loading ftb data blob", log.INFO)
+
+	tableData.versionLink = versionDoc.Links.Version.HRef
+	tableData.datasetLink = currentDatasetDoc.Links.Self.HRef
+	tableData.editionLink = currentEditionDoc.Links.Self.HRef
+	tableData.flexibleDimensions = dimensions
+	tableData.ftbBlob = FTBBlob{
+		datasetID: datasetID,
+		versionID: versionID,
+	}
+
+	return
+}
+
+func (api *API) createFTBDatasetTable(ctx context.Context, mongo Mongo, ftbBlob *FTBData, tableData TableData) (models.Table, models.Table, models.Table, error) {
+	// Create dataset version
+	datasetID := tableData.name
+	versionID := uuid.NewV4().String()
+	collectionID := uuid.NewV4().String()
+
+	dimensions := []models.Dimension{}
+	headers := []string{"ftb-table"}
+	keywords := []string{"census", "people"}
+
+	var datasetFTBTable, editionFTBTable, versionFTBTable models.Table
+
+	dimensionOptionCounts := make(map[string]int)
+
 	// Create Dimension Options
-	for _, dim := range ftbBlob.Dimensions {
+	for _, dim := range dimensions {
 		// Get dimension options
-		var ftbOptions *FTBData
-		ftbOptions, err = api.retrieveDimensionOptions(ctx, dim.Name)
+		ftbOptions, err := api.retrieveDimensionOptions(ctx, dim.ID)
 		if err != nil {
 			log.Event(ctx, "failed to retrieve dimension options document", log.ERROR, log.Error(err))
-			return
+			return datasetFTBTable, editionFTBTable, versionFTBTable, err
 		}
 
 		log.Event(ctx, "got dimension", log.Data{"dimension_name": ftbOptions.Dimensions[0].Name, "dimension_label": ftbOptions.Dimensions[0].Label, "label_count": len(ftbOptions.Dimensions[0].Labels), "code_count": len(ftbOptions.Dimensions[0].Codes)})
@@ -413,9 +511,9 @@ func (api *API) createFTBDatasetBlob(ctx context.Context, mongo Mongo, ftbBlob *
 
 			// Do a bulk upload of 500 documents at a time to speed the process of loading data into mongo db
 			if len(options) == 500 {
-				if err = mongo.BulkInsertDimensionOptions(options); err != nil {
+				if err := mongo.BulkInsertDimensionOptions(options); err != nil {
 					log.Event(ctx, "failed to add dimension options in bulk request to mongo db", log.ERROR, log.Error(err))
-					return
+					return datasetFTBTable, editionFTBTable, versionFTBTable, err
 				}
 
 				options = nil
@@ -424,35 +522,14 @@ func (api *API) createFTBDatasetBlob(ctx context.Context, mongo Mongo, ftbBlob *
 
 		// Add leftover docs to mongo
 		if len(options) != 0 {
-			if err = mongo.BulkInsertDimensionOptions(options); err != nil {
+			if err := mongo.BulkInsertDimensionOptions(options); err != nil {
 				log.Event(ctx, "failed to add last set of dimension options in bulk request to mongo db", log.ERROR, log.Error(err))
-				return
+				return datasetFTBTable, editionFTBTable, versionFTBTable, err
 			}
 
 			options = nil
 		}
 	}
-	log.Event(ctx, "successfully completed loading ftb data blob", log.INFO)
-
-	tableData.versionLink = versionDoc.Links.Version.HRef
-	tableData.datasetLink = currentDatasetDoc.Links.Self.HRef
-	tableData.editionLink = currentEditionDoc.Links.Self.HRef
-	tableData.flexibleDimensions = dimensions
-	tableData.ftbBlob = FTBBlob{
-		datasetID: datasetID,
-		versionID: versionID,
-	}
-
-	return
-}
-
-func (api *API) createFTBDatasetTable(ctx context.Context, mongo Mongo, ftbBlob *FTBData, tableData TableData) (models.Table, models.Table, models.Table, error) {
-	// Create dataset version
-	dimensions := []models.Dimension{}
-	headers := []string{"ftb-table"}
-	keywords := []string{"census", "people"}
-
-	var datasetFTBTable, editionFTBTable, versionFTBTable models.Table
 
 	count := 0
 	for _, dim := range ftbBlob.Dimensions {
@@ -461,11 +538,12 @@ func (api *API) createFTBDatasetTable(ctx context.Context, mongo Mongo, ftbBlob 
 		}
 		count++
 		dimension := models.Dimension{
-			Description: "",
-			HRef:        "http://localhost:22400/code-lists/" + dim.Name,
-			ID:          dim.Name,
-			Name:        dim.Label,
-			Label:       dim.Label,
+			Description:     "",
+			HRef:            "http://localhost:22400/code-lists/" + dim.Name,
+			ID:              dim.Name,
+			Name:            dim.Label,
+			Label:           dim.Label,
+			NumberOfOptions: dimensionOptionCounts[dim.Name],
 		}
 		if len(dim.MapFrom) < 1 {
 			dimension.Category = dim.Name
@@ -481,10 +559,6 @@ func (api *API) createFTBDatasetTable(ctx context.Context, mongo Mongo, ftbBlob 
 	if len(tableData.dimensions) != count {
 		return datasetFTBTable, editionFTBTable, versionFTBTable, errors.New("Dimension not found to create ftb dataset table")
 	}
-
-	datasetID := tableData.name
-	versionID := uuid.NewV4().String()
-	collectionID := uuid.NewV4().String()
 
 	versionDoc := &models.Version{
 		CollectionID:   collectionID,
@@ -647,70 +721,6 @@ func (api *API) createFTBDatasetTable(ctx context.Context, mongo Mongo, ftbBlob 
 		return datasetFTBTable, editionFTBTable, versionFTBTable, err
 	}
 
-	// Create Dimension Options
-	for _, dim := range dimensions {
-		// Get dimension options
-		ftbOptions, err := api.retrieveDimensionOptions(ctx, dim.ID)
-		if err != nil {
-			log.Event(ctx, "failed to retrieve dimension options document", log.ERROR, log.Error(err))
-			return datasetFTBTable, editionFTBTable, versionFTBTable, err
-		}
-
-		log.Event(ctx, "got dimension", log.Data{"dimension_name": ftbOptions.Dimensions[0].Name, "dimension_label": ftbOptions.Dimensions[0].Label, "label_count": len(ftbOptions.Dimensions[0].Labels), "code_count": len(ftbOptions.Dimensions[0].Codes)})
-
-		options := make([]interface{}, 500)
-		// Add each dimension option to mongo
-		for i, option := range ftbOptions.Dimensions[0].Codes {
-
-			label := ftbOptions.Dimensions[0].Codes[i]
-			if len(ftbOptions.Dimensions[0].Labels) > 0 {
-				label = ftbOptions.Dimensions[0].Labels[i]
-			}
-			dimensionOption := &models.DimensionOption{
-				InstanceID:  versionID,
-				Label:       label,
-				LastUpdated: time.Now().UTC(),
-				Links: models.DimensionOptionLinks{
-					Code: models.LinkObject{
-						HRef: fmt.Sprintf("%s/code-lists/%s/codes/%s", mongo.CodeListURL, ftbOptions.Dimensions[0].Name, option),
-						ID:   option,
-					},
-					CodeList: models.LinkObject{
-						HRef: fmt.Sprintf("%s/code-lists/%s", mongo.CodeListURL, ftbOptions.Dimensions[0].Name),
-						ID:   ftbOptions.Dimensions[0].Name,
-					},
-					Version: models.LinkObject{
-						HRef: datasetAPIURL + "/datasets/" + datasetID + "/editions/" + edition + "/versions/1",
-						ID:   "1",
-					},
-				},
-				Name:   ftbOptions.Dimensions[0].Name,
-				Option: option,
-			}
-
-			options = append(options, dimensionOption)
-
-			// Do a bulk upload of 500 documents at a time to speed the process of loading data into mongo db
-			if len(options) == 500 {
-				if err := mongo.BulkInsertDimensionOptions(options); err != nil {
-					log.Event(ctx, "failed to add dimension options in bulk request to mongo db", log.ERROR, log.Error(err))
-					return datasetFTBTable, editionFTBTable, versionFTBTable, err
-				}
-
-				options = nil
-			}
-		}
-
-		// Add leftover docs to mongo
-		if len(options) != 0 {
-			if err := mongo.BulkInsertDimensionOptions(options); err != nil {
-				log.Event(ctx, "failed to add last set of dimension options in bulk request to mongo db", log.ERROR, log.Error(err))
-				return datasetFTBTable, editionFTBTable, versionFTBTable, err
-			}
-
-			options = nil
-		}
-	}
 	log.Event(ctx, "successfully completed loading ftb data table", log.INFO)
 
 	datasetFTBTable = models.Table{
