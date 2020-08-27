@@ -333,6 +333,9 @@ components:
         category:
           description: "The category to which a dataset dimension belongs to. For instance if there are two dimension representing age, one with intervals of 5 and the other with 10, both will be of category `age`. Only applies to data type of `ftb`."
           type: string
+        number_of_options:
+          description: "The number of options available for selection for this dimension."
+          type: integer
     CollectionID:
       description: "The id of the unpublished collection (of datasets) that this dataset is associated with"
       type: string
@@ -561,6 +564,9 @@ components:
               $ref: '#/components/schemas/OptionsLink'
             version:
               $ref: '#/components/schemas/VersionLink'
+        number_of_options:
+          description: "The number of options available for selection for this dimension."
+          type: integer
     Dimensions:
       type: object
       properties:
@@ -796,6 +802,11 @@ components:
               $ref: '#/components/schemas/DownloadObject'
             xls:
               $ref: '#/components/schemas/DownloadObject'
+        flexible_dimensions:
+          description: "A list of codelists for each dimension of this version"
+          type: array
+          items:
+            $ref: '#/components/schemas/Codelist'
         ftb_type:
           description: "The ftb data type."
           enum: [
