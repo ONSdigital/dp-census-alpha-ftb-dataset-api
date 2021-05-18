@@ -796,7 +796,7 @@ func NewFTBAPI(clienter dphttp.Clienter, FTBAPIURL string) *API {
 
 func (api *API) retrieveDimensionOptions(ctx context.Context, dim string) (*FTBData, error) {
 	// Get People Dataset
-	path := "/v8/codebook/People?var=" + dim
+	path := "/v8/codebook/People?v=" + dim
 
 	responseBody, _, err := api.getFTBAPI(ctx, ftbAuthToken, ftbHost, path)
 	if err != nil {
