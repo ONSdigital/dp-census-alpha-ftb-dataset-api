@@ -31,7 +31,7 @@ const (
 
 	defaultBindAddr         = "localhost:27017"
 	defaultFTBDatasetAPIURL = "http://localhost:10400"
-	defaultFTBHost          = "localhost:10100"
+	defaultFTBHost          = "localhost:8491"
 	defaultFTBAuthToken     = "auth-token"
 
 	edition          = "2011"
@@ -119,7 +119,7 @@ func main() {
 	log.Event(ctx, "got response", log.Data{"response": ftbBlob, "status": status})
 
 	// Create FTB Data Blob
-
+	// Extracts complete codebook and loads into Mongo, potentially only done once in RL?
 	tableData, err := api.createFTBDatasetBlob(ctx, mongo, ftbBlob)
 	if err != nil {
 		os.Exit(1)
@@ -154,7 +154,6 @@ func main() {
 	}
 
 	log.Event(ctx, "successfully completed loading ftb datasets", log.INFO)
-
 	// Update ftb data blob with tables
 }
 
@@ -469,6 +468,7 @@ func (api *API) createFTBDatasetTable(ctx context.Context, mongo Mongo, ftbBlob 
 		if _, ok := tableData.dimensions[dim.Name]; !ok {
 			continue
 		}
+
 		count++
 		dimension := models.Dimension{
 			Description: "",
@@ -497,6 +497,7 @@ func (api *API) createFTBDatasetTable(ctx context.Context, mongo Mongo, ftbBlob 
 	// Create Dimension Options
 	for _, dim := range dimensions {
 		// Get dimension options
+		// (Variable categories in FTB terms)
 		ftbOptions, err := api.retrieveDimensionOptions(ctx, dim.ID)
 		if err != nil {
 			log.Event(ctx, "failed to retrieve dimension options document", log.ERROR, log.Error(err))
@@ -787,7 +788,6 @@ type API struct {
 
 // NewFTBAPI creates an FTBAPI object
 func NewFTBAPI(clienter dphttp.Clienter, FTBAPIURL string) *API {
-
 	return &API{
 		clienter: clienter,
 		url:      FTBAPIURL,
@@ -797,6 +797,7 @@ func NewFTBAPI(clienter dphttp.Clienter, FTBAPIURL string) *API {
 func (api *API) retrieveDimensionOptions(ctx context.Context, dim string) (*FTBData, error) {
 	// Get People Dataset
 	path := "/v6/codebook/People?var=" + dim
+
 	responseBody, _, err := api.getFTBAPI(ctx, ftbAuthToken, ftbHost, path)
 	if err != nil {
 		log.Event(ctx, "failed to make request to FTB", log.Data{"ftb_url": ftbHost + path})
