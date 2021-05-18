@@ -102,7 +102,7 @@ func main() {
 	api := NewFTBAPI(cli, ftbHost)
 
 	// Get People Dataset
-	path := "/v6/codebook/People?cats=false"
+	path := "/v8/codebook/People?cats=false"
 	responseBody, status, err := api.getFTBAPI(ctx, ftbAuthToken, ftbHost, path)
 	if err != nil {
 		log.Event(ctx, "failed to make request to FTB", log.Data{"ftb_url": ftbHost + path})
@@ -796,7 +796,7 @@ func NewFTBAPI(clienter dphttp.Clienter, FTBAPIURL string) *API {
 
 func (api *API) retrieveDimensionOptions(ctx context.Context, dim string) (*FTBData, error) {
 	// Get People Dataset
-	path := "/v6/codebook/People?var=" + dim
+	path := "/v8/codebook/People?var=" + dim
 
 	responseBody, _, err := api.getFTBAPI(ctx, ftbAuthToken, ftbHost, path)
 	if err != nil {
