@@ -31,7 +31,7 @@ const (
 
 	defaultBindAddr         = "localhost:27017"
 	defaultFTBDatasetAPIURL = "http://localhost:10400"
-	defaultFTBHost          = "localhost:8491"
+	defaultFTBHost          = "http://localhost:8491"
 	defaultFTBAuthToken     = "auth-token"
 
 	edition          = "2011"
@@ -101,8 +101,8 @@ func main() {
 	cli := dphttp.NewClient()
 	api := NewFTBAPI(cli, ftbHost)
 
-	// Get People Dataset
-	path := "/v8/codebook/People?cats=false"
+	// Get Example Dataset
+	path := "/v8/codebook/Example?cats=false"
 	responseBody, status, err := api.getFTBAPI(ctx, ftbAuthToken, ftbHost, path)
 	if err != nil {
 		log.Event(ctx, "failed to make request to FTB", log.Data{"ftb_url": ftbHost + path})
@@ -129,15 +129,14 @@ func main() {
 
 	// Create FTB Data Table
 	tableData.dimensions = map[string]bool{
-		"AGE":   true,
-		"CARER": true,
-		"SEX":   true,
-		"MSOA":  true,
+		"country":   true,
+		"sex": true,
+		"siblings":   true,
 	}
 
-	tableData.name = "2011-census-carer-msoa-age-and-sex"
-	tableData.title = "2011 Census - Unpaid Care for Middle Layer Super Output Areas across Age and Sex"
-	tableData.description = "The provision of unpaid care across middle layer super output areas containing variations across age and sex from 2011 census."
+	tableData.name = "2011-census-carer-country-sex-and-siblings"
+	tableData.title = "2011 Census - Unpaid Care for Middle Layer Super Output Areas across Country and Sex"
+	tableData.description = "The provision of unpaid care across middle layer super output areas containing variations across country and sex from 2021 example."
 
 	datasetFTBTable, editionFTBTable, versionFTBTable, err := api.createFTBDatasetTable(ctx, mongo, ftbBlob, tableData)
 	if err != nil {
@@ -215,17 +214,18 @@ func (api *API) createFTBDatasetBlob(ctx context.Context, mongo Mongo, ftbBlob *
 		}
 
 		dimensionOptionCounts[dim.Name] = len(ftbOptions.Dimensions[0].Codes)
-
 		log.Event(ctx, "got dimension", log.Data{"dimension_name": ftbOptions.Dimensions[0].Name, "dimension_label": ftbOptions.Dimensions[0].Label, "label_count": len(ftbOptions.Dimensions[0].Labels), "code_count": len(ftbOptions.Dimensions[0].Codes)})
 
 		options := make([]interface{}, 500)
+
 		// Add each dimension option to mongo
 		for i, option := range ftbOptions.Dimensions[0].Codes {
-
 			label := ftbOptions.Dimensions[0].Codes[i]
+
 			if len(ftbOptions.Dimensions[0].Labels) > 0 {
 				label = ftbOptions.Dimensions[0].Labels[i]
 			}
+
 			dimensionOption := &models.DimensionOption{
 				InstanceID:  versionID,
 				Label:       label,
@@ -350,10 +350,10 @@ func (api *API) createFTBDatasetBlob(ctx context.Context, mongo Mongo, ftbBlob *
 				Telephone: "+44 (0)845 601 3034",
 			},
 		},
-		Description: "2011 Census data for People",
+		Description: "2011 Census data for Example",
 		FTBType:     "ftb-blob",
 		ID:          datasetID,
-		Keywords:    []string{"census", "people"},
+		Keywords:    []string{"census", "example"},
 		License:     license,
 		Links: &models.DatasetLinks{
 			Editions: &models.LinkObject{
@@ -383,7 +383,7 @@ func (api *API) createFTBDatasetBlob(ctx context.Context, mongo Mongo, ftbBlob *
 			{}, // TODO add tables
 		},
 		Theme:         "census",
-		Title:         "Census 2011 - People",
+		Title:         "Census 2011 - Example",
 		Type:          "ftb",
 		UnitOfMeasure: unitOfMeasure,
 		URI:           "",
@@ -459,7 +459,7 @@ func (api *API) createFTBDatasetTable(ctx context.Context, mongo Mongo, ftbBlob 
 
 	dimensions := []models.Dimension{}
 	headers := []string{"ftb-table"}
-	keywords := []string{"census", "people"}
+	keywords := []string{"census", "example"}
 
 	var datasetFTBTable, editionFTBTable, versionFTBTable models.Table
 
@@ -744,7 +744,7 @@ func (api *API) createFTBDatasetTable(ctx context.Context, mongo Mongo, ftbBlob 
 }
 
 func (api *API) updateFTBDatasetBlob(ctx context.Context, mongo Mongo, datasetID, instanceID string, datasetFTBTables, editionFTBTables, versionFTBTables []models.Table) error {
-	// Update dataset People with dataset tables
+	// Update dataset Example with dataset tables
 	datasetUpdates := make(bson.M)
 	datasetUpdates["next.tables"] = datasetFTBTables
 	datasetUpdates["current.tables"] = datasetFTBTables
@@ -754,7 +754,7 @@ func (api *API) updateFTBDatasetBlob(ctx context.Context, mongo Mongo, datasetID
 		return err
 	}
 
-	// Update edition People with edition tables
+	// Update edition Example with edition tables
 	editionUpdates := make(bson.M)
 	editionUpdates["next.tables"] = editionFTBTables
 	editionUpdates["current.tables"] = editionFTBTables
@@ -764,7 +764,7 @@ func (api *API) updateFTBDatasetBlob(ctx context.Context, mongo Mongo, datasetID
 		return err
 	}
 
-	// Update version People with version tables
+	// Update version Example with version tables
 	versionUpdates := make(bson.M)
 	versionUpdates["tables"] = versionFTBTables
 
@@ -795,8 +795,8 @@ func NewFTBAPI(clienter dphttp.Clienter, FTBAPIURL string) *API {
 }
 
 func (api *API) retrieveDimensionOptions(ctx context.Context, dim string) (*FTBData, error) {
-	// Get People Dataset
-	path := "/v8/codebook/People?v=" + dim
+	// Get Example Dataset
+	path := "/v8/codebook/Example?v=" + dim
 
 	responseBody, _, err := api.getFTBAPI(ctx, ftbAuthToken, ftbHost, path)
 	if err != nil {
